@@ -285,7 +285,11 @@ Groups goroutines by the value of the label with the specified key.
 Called without arguments it will show information about the current goroutine.
 Called with a single argument it will switch to the specified goroutine.
 Called with more arguments it will execute a command on the specified goroutine.`},
-		{aliases: []string{"breakpoints", "bp"}, group: breakCmds, cmdFn: breakpoints, helpMsg: "Print out info for active breakpoints."},
+		{aliases: []string{"breakpoints", "bp"}, group: breakCmds, cmdFn: breakpoints, helpMsg: `Print out info for active breakpoints.
+	
+	breakpoints [-a]
+
+Specifying -a prints all physical breakpoint, including internal breakpoints.`},
 		{aliases: []string{"print", "p"}, group: dataCmds, allowedPrefixes: onPrefix | deferredPrefix, cmdFn: printVar, helpMsg: `Evaluate an expression.
 
 	[goroutine <n>] [frame <m>] print [%format] <expression>
@@ -1626,7 +1630,7 @@ func clear(t *Term, ctx callContext, args string) error {
 }
 
 func clearAll(t *Term, ctx callContext, args string) error {
-	breakPoints, err := t.client.ListBreakpoints()
+	breakPoints, err := t.client.ListBreakpoints(false)
 	if err != nil {
 		return err
 	}
@@ -1692,7 +1696,7 @@ func (a byID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byID) Less(i, j int) bool { return a[i].ID < a[j].ID }
 
 func breakpoints(t *Term, ctx callContext, args string) error {
-	breakPoints, err := t.client.ListBreakpoints()
+	breakPoints, err := t.client.ListBreakpoints(args == "-a")
 	if err != nil {
 		return err
 	}
@@ -1730,6 +1734,10 @@ func breakpoints(t *Term, ctx callContext, args string) error {
 		for i := range bp.Variables {
 			attrs = append(attrs, fmt.Sprintf("\tprint %s", bp.Variables[i]))
 		}
+		for i := range bp.VerboseDescr {
+			attrs = append(attrs, fmt.Sprintf("\t%s", bp.VerboseDescr[i]))
+		}
+
 		if len(attrs) > 0 {
 			fmt.Printf("%s\n", strings.Join(attrs, "\n"))
 		}
