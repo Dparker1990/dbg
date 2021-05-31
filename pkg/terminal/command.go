@@ -1702,7 +1702,11 @@ func breakpoints(t *Term, ctx callContext, args string) error {
 	}
 	sort.Sort(byID(breakPoints))
 	for _, bp := range breakPoints {
-		fmt.Printf("%s at %v (%d)\n", formatBreakpointName(bp, true), t.formatBreakpointLocation(bp), bp.TotalHitCount)
+		enabled := "(enabled)"
+		if bp.Disabled {
+			enabled = "(disabled)"
+		}
+		fmt.Printf("%s %s at %v (%d)\n", formatBreakpointName(bp, true), enabled, t.formatBreakpointLocation(bp), bp.TotalHitCount)
 
 		var attrs []string
 		if bp.Cond != "" {
@@ -2543,6 +2547,10 @@ func printcontext(t *Term, state *api.DebuggerState) {
 	if state.When != "" {
 		fmt.Println(state.When)
 	}
+
+	for _, watchpoint := range state.WatchOutOfScope {
+		fmt.Printf("%s went out of scope and was cleared\n", formatBreakpointName(watchpoint, true))
+	}
 }
 
 func printcontextLocation(t *Term, loc api.Location) {
@@ -2986,11 +2994,7 @@ func formatBreakpointName(bp *api.Breakpoint, upcase bool) string {
 	if bp.WatchExpr != "" && bp.WatchExpr != bp.Name {
 		return fmt.Sprintf("%s %s on [%s]", thing, id, bp.WatchExpr)
 	}
-	state := "(enabled)"
-	if bp.Disabled {
-		state = "(disabled)"
-	}
-	return fmt.Sprintf("%s %s %s", thing, id, state)
+	return fmt.Sprintf("%s %s", thing, id)
 }
 
 func (t *Term) formatBreakpointLocation(bp *api.Breakpoint) string {
