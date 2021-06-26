@@ -574,25 +574,26 @@ func (g *G) readDefers(frames []Stackframe) {
 }
 
 func (d *Defer) load() {
-	d.variable.loadValue(LoadConfig{false, 1, 0, 0, -1, 0})
-	if d.variable.Unreadable != nil {
-		d.Unreadable = d.variable.Unreadable
+	v := d.variable // +rtype _defer
+	v.loadValue(LoadConfig{false, 1, 0, 0, -1, 0})
+	if v.Unreadable != nil {
+		d.Unreadable = v.Unreadable
 		return
 	}
 
-	fnvar := d.variable.fieldVariable("fn").maybeDereference()
+	fnvar := v.fieldVariable("fn").maybeDereference() // +rtype *funcval
 	if fnvar.Addr != 0 {
-		fnvar = fnvar.loadFieldNamed("fn")
+		fnvar2 := fnvar.loadFieldNamed("fn") // +rtype uintptr
 		if fnvar.Unreadable == nil {
-			d.DwrapPC, _ = constant.Uint64Val(fnvar.Value)
+			d.DwrapPC, _ = constant.Uint64Val(fnvar2.Value)
 		}
 	}
 
-	d.DeferPC, _ = constant.Uint64Val(d.variable.fieldVariable("pc").Value)
-	d.SP, _ = constant.Uint64Val(d.variable.fieldVariable("sp").Value)
-	d.argSz, _ = constant.Int64Val(d.variable.fieldVariable("siz").Value)
+	d.DeferPC, _ = constant.Uint64Val(v.fieldVariable("pc").Value) // +rtype uintptr
+	d.SP, _ = constant.Uint64Val(v.fieldVariable("sp").Value)      // +rtype uintptr
+	d.argSz, _ = constant.Int64Val(v.fieldVariable("siz").Value)   // +rtype int32
 
-	linkvar := d.variable.fieldVariable("link").maybeDereference()
+	linkvar := v.fieldVariable("link").maybeDereference() // +rtype *_defer
 	if linkvar.Addr != 0 {
 		d.link = &Defer{variable: linkvar}
 	}
