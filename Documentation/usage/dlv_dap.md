@@ -17,8 +17,18 @@ The server does not yet accept multiple client connections (--accept-multiclient
 While --continue is not supported, stopOnEntry launch/attach attribute can be used to control if
 execution is resumed at the start of the debug session.
 
+The --client-addr flag is a special flag that makes the server initiate a debug session
+by dialing in to the host:port where a DAP client is waiting. This server process
+will exit when the debug session ends.
+
 ```
 dlv dap
+```
+
+### Options
+
+```
+      --client-addr string   host:port where the DAP client is waiting for the DAP server to dial in
 ```
 
 ### Options inherited from parent commands
