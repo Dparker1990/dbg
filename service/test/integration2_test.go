@@ -196,7 +196,7 @@ func TestRestart_duringStop(t *testing.T) {
 		if c.ProcessPid() == origPid {
 			t.Fatal("did not spawn new process, has same PID")
 		}
-		bps, err := c.ListBreakpoints()
+		bps, err := c.ListBreakpoints(false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -510,6 +510,7 @@ func TestClientServer_clearBreakpoint(t *testing.T) {
 func TestClientServer_toggleBreakpoint(t *testing.T) {
 	withTestClient2("testtoggle", t, func(c service.Client) {
 		toggle := func(bp *api.Breakpoint) {
+			t.Helper()
 			dbp, err := c.ToggleBreakpoint(bp.ID)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
@@ -1630,7 +1631,7 @@ func TestClientServer_RestartBreakpointPosition(t *testing.T) {
 		assertNoError(err, t, "Halt")
 		_, err = c.Restart(false)
 		assertNoError(err, t, "Restart")
-		bps, err := c.ListBreakpoints()
+		bps, err := c.ListBreakpoints(false)
 		assertNoError(err, t, "ListBreakpoints")
 		for _, bp := range bps {
 			if bp.Name == bpBefore.Name {
@@ -2137,7 +2138,7 @@ func TestDoubleCreateBreakpoint(t *testing.T) {
 		_, err := c.CreateBreakpoint(&api.Breakpoint{FunctionName: "main.main", Line: 1, Name: "firstbreakpoint", Tracepoint: true})
 		assertNoError(err, t, "CreateBreakpoint 1")
 
-		bps, err := c.ListBreakpoints()
+		bps, err := c.ListBreakpoints(false)
 		assertNoError(err, t, "ListBreakpoints 1")
 
 		t.Logf("breakpoints before second call:")
@@ -2150,7 +2151,7 @@ func TestDoubleCreateBreakpoint(t *testing.T) {
 		_, err = c.CreateBreakpoint(&api.Breakpoint{FunctionName: "main.main", Line: 1, Name: "secondbreakpoint", Tracepoint: true})
 		assertError(err, t, "CreateBreakpoint 2") // breakpoint exists
 
-		bps, err = c.ListBreakpoints()
+		bps, err = c.ListBreakpoints(false)
 		assertNoError(err, t, "ListBreakpoints 2")
 
 		t.Logf("breakpoints after second call:")
@@ -2200,7 +2201,7 @@ func TestClearLogicalBreakpoint(t *testing.T) {
 		}
 		_, err = c.ClearBreakpoint(bp.ID)
 		assertNoError(err, t, "ClearBreakpoint()")
-		bps, err := c.ListBreakpoints()
+		bps, err := c.ListBreakpoints(false)
 		assertNoError(err, t, "ListBreakpoints()")
 		for _, curbp := range bps {
 			if curbp.ID == bp.ID {
@@ -2321,7 +2322,7 @@ func TestDetachLeaveRunning(t *testing.T) {
 
 func assertNoDuplicateBreakpoints(t *testing.T, c service.Client) {
 	t.Helper()
-	bps, _ := c.ListBreakpoints()
+	bps, _ := c.ListBreakpoints(false)
 	seen := make(map[int]bool)
 	for _, bp := range bps {
 		t.Logf("%#v\n", bp)
