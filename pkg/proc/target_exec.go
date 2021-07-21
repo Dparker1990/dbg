@@ -72,6 +72,7 @@ func (dbp *Target) Continue() error {
 		dbp.ClearCaches()
 		trapthread, stopReason, err := dbp.proc.ContinueOnce()
 		dbp.StopReason = stopReason
+
 		if err != nil {
 			// Attempt to refresh status of current thread/current goroutine, see
 			// Issue #2078.
